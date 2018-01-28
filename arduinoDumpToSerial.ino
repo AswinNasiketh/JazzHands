@@ -4,21 +4,24 @@
 
 #define PIN_INPUT 0
 #define PIN_OUTPUT 3
-#define BACKWARD_SPEED_LIMIT 70
+#define BACKWARD_SPEED_LIMIT 70 //continuos rotation servos were used to provide enough rotation and therefore their positions couldn't be controlled but speed of rotation could
 #define FORWARD_SPEED_LIMIT 110
 
-SerialCommand sCmd;
+//Certain lines of code have been commented out as only one finger was working at the end of IC Hack and the servo part of the project wasn't implemented yet
+
+SerialCommand sCmd; // object used to receive commands from unity
 double currentFingerPos[5]; 
 double nextFingerPos[5];
 float tempFloat[5];
 
-
+//PID controller constants and I/Ovariables 
 double Kp[] = {2,2,2,2,2};
 double Ki[] = {5,5,5,5,5};
 double Kd[] = {1,1,1,1,1};
 double servoCommand[] = {90, 90, 90, 90, 90};
+// PID controllers needed due to continuos servos
 //PID pid0(&currentFingerPos[0], &servoCommand[0], &nextFingerPos[0], Kp[0],Ki[0],Kd[0], DIRECT); 
-PID pid1(&currentFingerPos[1], &servoCommand[1], &nextFingerPos[1], Kp[1],Ki[1],Kd[1], DIRECT);
+PID pid1(&currentFingerPos[1], &servoCommand[1], &nextFingerPos[1], Kp[1],Ki[1],Kd[1], DIRECT); 
 //PID pid2(&currentFingerPos[2], &servoCommand[2], &nextFingerPos[2], Kp[2],Ki[2],Kd[2], DIRECT);
 //PID pid3(&currentFingerPos[3], &servoCommand[3], &nextFingerPos[3], Kp[3],Ki[3],Kd[3], DIRECT);
 //PID pid4(&currentFingerPos[4], &servoCommand[4], &nextFingerPos[4], Kp[4],Ki[4],Kd[4], DIRECT);
@@ -61,14 +64,14 @@ void loop() {
     currentFingerPos[1] = (double) stretch(1,tempFloat[1]);
   
 //
- updateServos();
-//  Serial.println(tempFloat[1]);
+// updateServos(); only partially implemented 
+//  Serial.println(tempFloat[1]); for calibration of stretch sensor
   
   if (Serial.available() > 0){
   sCmd.readSerial();
   }
 }
-
+//reads the desired hand position from unity
 void setHandler(const char *command){
   char *arg;
   for(int i = 0; i < 5; i++){
@@ -80,13 +83,14 @@ void setHandler(const char *command){
     }    
   }  
 }
-
+//sends the current finger positions to Unity via a serial port
 void readHandler(const char *command){
   for(int i =0; i< 5; i++){
     Serial.println((int)currentFingerPos[i]);
   }
 } 
 
+//used to scale the analog values measured by arduino to values more easily usable by unity 
 double stretch(int inPin, float &out){
  out += (analogRead(inPin) - out) * 0.2;
  double mapped = map(out, 850, 900, 0, 90);
